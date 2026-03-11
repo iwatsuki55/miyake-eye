@@ -122,7 +122,7 @@ select.filter-sel {
   border-top-color: var(--teal);
 }
 
-/* Badges */
+
 .badge {
   display: inline-flex; align-items: center; gap: 4px;
   padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; white-space: nowrap;
@@ -300,6 +300,11 @@ tr:hover .row-actions { opacity: 1; }
           <option value="高">🔴 高</option>
           <option value="中">🟡 中</option>
           <option value="低">🟢 低</option>
+        </select>
+        <select class="filter-sel" onchange="renderTable()" id="sort-sel" style="border-color:var(--blue);color:var(--blue)">
+          <option value="">↕ 並び替え（デフォルト）</option>
+          <option value="start-asc">📅 開始日：早い順</option>
+          <option value="start-desc">📅 開始日：遅い順</option>
         </select>
       </div>
     </div>
@@ -566,12 +571,19 @@ function renderTable() {
     return true;
   });
 
+  // Sort by dropdown
+  const sortVal = document.getElementById('sort-sel').value;
+  const isSorting = !!sortVal;
+  if (sortVal === 'start-asc')  filtered = [...filtered].sort((a,b) => (a.start||'') < (b.start||'') ? -1 : 1);
+  if (sortVal === 'start-desc') filtered = [...filtered].sort((a,b) => (a.start||'') > (b.start||'') ? -1 : 1);
+
   const tbody = document.getElementById('task-tbody');
   let html = '';
   let lastProj = null;
+  const isSorting = !!sortState.key;
 
   filtered.forEach(t => {
-    if (t.proj !== lastProj) {
+    if (!isSorting && t.proj !== lastProj) {
       const isP2 = t.proj === 'P2';
       const projName = isP2 ? '📖 属人化業務のマニュアル化' : '🏥 院内デジタル化';
       html += `<tr class="project-header${isP2?' p2-header':''}"><td colspan="10">${projName}</td></tr>`;
