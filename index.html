@@ -580,7 +580,6 @@ function renderTable() {
   const tbody = document.getElementById('task-tbody');
   let html = '';
   let lastProj = null;
-  const isSorting = !!sortState.key;
 
   filtered.forEach(t => {
     if (!isSorting && t.proj !== lastProj) {
