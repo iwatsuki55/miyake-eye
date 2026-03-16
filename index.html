@@ -262,6 +262,7 @@ tr:hover .row-actions { opacity: 1; }
     <div class="topbar-tag">PM DASHBOARD</div>
   </div>
   <div class="topbar-actions">
+    <button class="btn btn-outline btn-sm" onclick="resetTasks()" style="opacity:0.6">🔄 リセット</button>
     <button class="btn btn-outline btn-sm" onclick="openExportView()">📤 CSV出力</button>
     <button class="btn btn-primary btn-sm" onclick="openAddModal()">＋ タスク追加</button>
   </div>
@@ -805,13 +806,13 @@ function saveTask() {
   } else {
     const newNum = nextId[proj]++;
     data.id = `${proj}-${newNum}`;
-    // Insert after last task of same project
     const lastIdx = tasks.map((t,i)=>({t,i})).filter(x=>x.t.proj===proj).pop();
     if (lastIdx) tasks.splice(lastIdx.i+1, 0, data);
     else tasks.push(data);
     toast('✅ タスクを追加しました');
   }
 
+  saveTasks();
   closeModal();
   renderTable();
 }
@@ -819,14 +820,44 @@ function saveTask() {
 function deleteTask(id) {
   if (!confirm(`タスク「${tasks.find(t=>t.id===id)?.name}」を削除しますか？`)) return;
   tasks = tasks.filter(t => t.id !== id);
+  saveTasks();
   renderTable();
   toast('🗑 タスクを削除しました');
+}
+
+// ===== localStorage 永続化 =====
+const STORAGE_KEY = 'miyake-dx-tasks';
+
+function saveTasks() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify({ tasks, nextId }));
+}
+
+function loadTasks() {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (parsed.tasks && parsed.tasks.length > 0) {
+        tasks = parsed.tasks;
+        nextId = parsed.nextId || nextId;
+        return true;
+      }
+    }
+  } catch(e) {}
+  return false;
+}
+
+function resetTasks() {
+  if (!confirm('すべての変更をリセットし、初期データに戻しますか？')) return;
+  localStorage.removeItem(STORAGE_KEY);
+  location.reload();
 }
 
 // Update phase list when project changes
 document.getElementById('f-proj').addEventListener('change', updatePhaseList);
 
 // ===== INIT =====
+loadTasks();
 renderTable();
 </script>
 </body>
